@@ -19,8 +19,10 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@orderly.network/core": "3.1.7-alpha.3",
     "@orderly.network/affiliate": "3.1.7-alpha.3",
     "@orderly.network/i18n": "3.1.7-alpha.3",
+    "@orderly.network/hooks": "3.1.7-alpha.3",
     "@orderly.network/markets": "3.1.7-alpha.3",
     "@orderly.network/portfolio": "3.1.7-alpha.3",
     "@orderly.network/react-app": "3.1.7-alpha.3",

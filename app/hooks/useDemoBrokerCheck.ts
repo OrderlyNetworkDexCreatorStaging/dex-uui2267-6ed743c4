@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAccount } from "@orderly.network/hooks";
+import { useAccount, useConfig } from "@orderly.network/hooks";
 import { getRuntimeConfig } from "@/utils/runtime-config";
 
 interface DemoAccountData {
@@ -16,6 +16,7 @@ interface DemoBrokerCheckResult {
 
 export function useDemoBrokerCheck(): DemoBrokerCheckResult {
   const { account } = useAccount();
+  const apiBaseUrl = useConfig("apiBaseUrl");
   const currentBrokerId = getRuntimeConfig("VITE_ORDERLY_BROKER_ID");
   const [result, setResult] = useState<DemoBrokerCheckResult>({
     hasDemoAccount: false,
@@ -44,7 +45,7 @@ export function useDemoBrokerCheck(): DemoBrokerCheckResult {
 
       try {
         const response = await fetch(
-          `https://api.orderly.org/v1/get_account?address=${account.address}&broker_id=demo`
+          `${apiBaseUrl}/v1/get_account?address=${account.address}&broker_id=demo`,
         );
 
         const data = await response.json();
@@ -72,7 +73,7 @@ export function useDemoBrokerCheck(): DemoBrokerCheckResult {
     };
 
     checkDemoAccount();
-  }, [account?.address, currentBrokerId]);
+  }, [account?.address, apiBaseUrl, currentBrokerId]);
 
   return result;
 }

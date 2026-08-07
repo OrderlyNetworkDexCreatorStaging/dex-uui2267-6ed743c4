@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { getRuntimeConfigArray } from "@/utils/runtime-config";
 import ipRangeCheck from "ip-range-check";
+import { useConfig } from "@orderly.network/hooks";
+import { getRuntimeConfigArray } from "@/utils/runtime-config";
 
 function isIpWhitelisted(ip: string, whitelistPatterns: string[]): boolean {
   return whitelistPatterns.some((pattern) => {
@@ -14,13 +15,14 @@ function isIpWhitelisted(ip: string, whitelistPatterns: string[]): boolean {
 }
 
 export const useIpRestriction = () => {
+  const apiBaseUrl = useConfig("apiBaseUrl");
   const [isRestricted, setIsRestricted] = useState<boolean>(false);
   const [ipInfo, setIpInfo] = useState<{ ip: string; region: string } | null>(
-    null
+    null,
   );
 
   useEffect(() => {
-    fetch("https://api.orderly.org/v1/ip_info")
+    fetch(`${apiBaseUrl}/v1/ip_info`)
       .then((res) => res.json())
       .then((data) => {
         const userRegion = data?.data?.region || "";
@@ -44,7 +46,7 @@ export const useIpRestriction = () => {
         console.error("Failed to fetch IP info:", error);
         setIsRestricted(false);
       });
-  }, []);
+  }, [apiBaseUrl]);
 
   return { isRestricted, ipInfo };
 };

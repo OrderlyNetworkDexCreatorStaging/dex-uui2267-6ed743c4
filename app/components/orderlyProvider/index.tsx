@@ -5,6 +5,11 @@ import { DemoGraduationChecker } from "@/components/DemoGraduationChecker";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useOrderlyConfig } from "@/utils/config";
 import {
+  CustomConfigStore,
+  getDeploymentNetworkId,
+  normalizeDeploymentEnv,
+} from "@/utils/orderly-environment";
+import {
   getRuntimeConfigBoolean,
   getRuntimeConfigArray,
   getRuntimeConfig,
@@ -14,9 +19,9 @@ import { resolveDexThemeConfig } from "@/utils/theme-config";
 import ServiceDisclaimerDialog from "./ServiceDisclaimerDialog";
 import { OrderlyLocaleProvider } from "./orderlyLocaleProvider";
 
-const NETWORK_ID_KEY = "orderly_network_id";
-
 const getNetworkId = (): NetworkId => {
+  const env = normalizeDeploymentEnv(getRuntimeConfig("VITE_DEPLOYMENT_ENV"));
+  if (env !== "prod") return getDeploymentNetworkId(env);
   if (typeof window === "undefined") return "mainnet";
 
   const disableMainnet = getRuntimeConfigBoolean("VITE_DISABLE_MAINNET");
@@ -30,12 +35,13 @@ const getNetworkId = (): NetworkId => {
     return "mainnet";
   }
 
-  return (localStorage.getItem(NETWORK_ID_KEY) as NetworkId) || "mainnet";
+  return (localStorage.getItem("orderly_network_id") as NetworkId) || "mainnet";
 };
 
 const setNetworkId = (networkId: NetworkId) => {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(NETWORK_ID_KEY, networkId);
+  const env = normalizeDeploymentEnv(getRuntimeConfig("VITE_DEPLOYMENT_ENV"));
+  if (env === "prod" && typeof window !== "undefined") {
+    localStorage.setItem("orderly_network_id", networkId);
   }
 };
 
@@ -48,7 +54,20 @@ const WalletConnector = lazy(
 
 const OrderlyProvider = (props: { children: ReactNode }) => {
   const config = useOrderlyConfig();
+  const deploymentEnv = normalizeDeploymentEnv(
+    getRuntimeConfig("VITE_DEPLOYMENT_ENV"),
+  );
   const networkId = getNetworkId();
+  const configStore = useMemo(
+    () =>
+      new CustomConfigStore({
+        brokerId: getRuntimeConfig("VITE_ORDERLY_BROKER_ID") || "demo",
+        brokerName: getRuntimeConfig("VITE_ORDERLY_BROKER_NAME"),
+        env: deploymentEnv,
+        networkId,
+      }),
+    [deploymentEnv, networkId],
+  );
   const themes = useMemo(() => resolveDexThemeConfig().themes, []);
 
   const privyAppId = getRuntimeConfig("VITE_PRIVY_APP_ID");
@@ -100,6 +119,7 @@ const OrderlyProvider = (props: { children: ReactNode }) => {
 
   const onChainChanged = useCallback(
     (_chainId: number, { isTestnet }: { isTestnet: boolean }) => {
+      if (deploymentEnv !== "prod") return;
       const currentNetworkId = getNetworkId();
       if (
         (isTestnet && currentNetworkId === "mainnet") ||
@@ -113,15 +133,13 @@ const OrderlyProvider = (props: { children: ReactNode }) => {
         }, 100);
       }
     },
-    [],
+    [deploymentEnv],
   );
 
   const appProvider = (
     <OrderlyAppProvider
-      brokerId={getRuntimeConfig("VITE_ORDERLY_BROKER_ID")}
-      brokerName={getRuntimeConfig("VITE_ORDERLY_BROKER_NAME")}
+      configStore={configStore}
       themes={themes}
-      networkId={networkId}
       onChainChanged={onChainChanged}
       appIcons={config.orderlyAppProvider.appIcons}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

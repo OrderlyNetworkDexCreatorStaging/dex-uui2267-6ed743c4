@@ -21,21 +21,26 @@ cd broker-template
 
 ```sh
 yarn install
+cp .env.example .env.local
 ```
 
 ## Configuration Steps
 
-### 1. Broker Configuration
+### 1. Environment Configuration
 
-Edit the `.env` file to set up your broker details:
+The repository keeps a minimal `.env` for compatibility with existing forks.
+For local customization, copy `.env.example` to the ignored `.env.local` file,
+then edit `.env.local` to configure the broker and application metadata.
+Variables prefixed with `VITE_` are exposed to the browser by Vite, so do not put
+private keys, passwords, or other secrets in this file.
 
 ```env
 # Broker settings
 VITE_ORDERLY_BROKER_ID=your_broker_id
 VITE_ORDERLY_BROKER_NAME=Your Broker Name
-VITE_ORDERLY_NETWORK_ID=mainnet  # or testnet for testing
+VITE_DEPLOYMENT_ENV=mainnet  # use testnet for testing
 
-# Meta tags
+# Application metadata
 VITE_APP_NAME=Your App Name
 VITE_APP_DESCRIPTION=Your app description for SEO
 
@@ -43,6 +48,14 @@ VITE_APP_DESCRIPTION=Your app description for SEO
 VITE_ENABLED_MENUS=Trading,Portfolio,Markets,Leaderboard
 VITE_CUSTOM_MENUS=Documentation,https://docs.yoursite.com;Blog,https://blog.yoursite.com;Support,https://support.yoursite.com
 ```
+
+`VITE_DEPLOYMENT_ENV` controls whether the app connects to Orderly mainnet or
+testnet. Restart the development server after changing `.env.local`; production
+deployments must be rebuilt so the new values are included.
+
+For deployments that use runtime configuration, values in `public/config.js`
+(`window.__RUNTIME_CONFIG__`) take precedence over the corresponding `.env.local`
+values. This allows configuration changes without rebuilding the application.
 
 ### 2. Theme Customization
 
@@ -98,4 +111,3 @@ For custom domain setup:
 - [Orderly JS SDK Documentation](https://github.com/OrderlyNetwork/js-sdk)
 - [Orderly Network Documentation](https://orderly.network/docs/sdks)
 - [Storybook Theme Editor](https://storybook.orderly.network/?path=/story/package-trading-tradingpage--page)
-

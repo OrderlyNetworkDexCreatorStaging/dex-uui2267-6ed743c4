@@ -1,6 +1,7 @@
 import { execSync } from "child_process";
 import fs from "fs/promises";
 import path from "path";
+import { getDeploymentApiBaseUrl } from "./app/utils/orderly-urls";
 
 const STATIC_ROUTES = [
   "/perp",
@@ -29,7 +30,8 @@ interface ApiResponse {
 
 async function fetchSymbols(): Promise<string[]> {
   try {
-    const response = await fetch("https://api.orderly.org/v1/public/info");
+    const apiBaseUrl = getDeploymentApiBaseUrl(process.env.VITE_DEPLOYMENT_ENV);
+    const response = await fetch(`${apiBaseUrl}/v1/public/info`);
     const data = (await response.json()) as ApiResponse;
     return data.data.rows.map((row) => row.symbol);
   } catch (error) {
